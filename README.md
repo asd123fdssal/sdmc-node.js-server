@@ -1,2 +1,2 @@
-# sdmc-node.js-server
-SDMC 프로젝트의 백엔드 리포지토리
+# SDMC_WEB_APP
+서브컬쳐 관련 CRUD 웹 앱
