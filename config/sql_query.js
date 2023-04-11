@@ -8,6 +8,7 @@ function get_game_title(page){
             t.id as \`title_id\`, 
             t.kor_name as \`title_name\`, 
             c.kor_name as \`company_name\`, 
+            t.release_date as \`release_date\`,
             count(r.isRecommend) as \`recommend\`
         from title t
         inner join company c on c.id = t.company_id
@@ -18,6 +19,20 @@ function get_game_title(page){
     `
 }
 
+function get_login_result(username, password){
+    return `
+        select 
+            id as \`uid\`
+        from member
+        where
+            username = \'${username}\'
+        and
+            password = \'${password}\'
+        limit 1
+    `
+}
+
 module.exports = {
-    get_game_title
+    get_game_title,
+    get_login_result
 }
