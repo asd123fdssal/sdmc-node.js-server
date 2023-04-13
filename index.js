@@ -30,7 +30,23 @@ app.use(session({
 }));
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+//app.use(cors());
+
+// 로컬 개발 환경에서 cors 에러를 피하기 위한 코드
+const whitelist = ["http://localhost:3000"];
+
+const corsOptions = {
+    credentials : true,
+    origin: function (origin, callback) {
+        if (whitelist.indexOf(origin) !== -1) { // 만일 whitelist 배열에 origin인자가 있을 경우
+            callback(null, true); // cors 허용
+        } else {
+            callback(new Error("Not Allowed Origin!")); // cors 비허용
+        }
+    },
+};
+
+app.use(cors(corsOptions)); // 옵션을 추가한 CORS 미들웨어 추가
 
 setInterval(function () {
     pool.query('SELECT 1');
@@ -53,7 +69,7 @@ app.get('/games/:index', function(req, res){
 });
 
 app.post('/login', function (req, res){
-    console.log(req.body)
+    // console.log(req.body)
     pool.query(get_login_result(req.body.username, req.body.password), function (error, rows){
         // 로그인 성공 시 세션 등록
         if (rows[0] !== undefined){
@@ -73,12 +89,8 @@ app.post('/login', function (req, res){
 });
 
 app.get('/login', function(req, res){
-    if(req.session.uid !== undefined) return res.redirect("/");
-    // if(req.session.uid !==undefined){
-    //     console.log('로그인된');
-    // }
-    res.send({
-
+    res.status(200).send({
+        loginResult: (req.session.uid !==undefined)
     });
 });
 
@@ -87,6 +99,16 @@ app.get('/', function (req, res){
         status:'success',
         data:req.body
     });
+});
+
+app.get('/logout', function (req, res){
+    if(req.session.uid !== undefined){
+        req.session.destroy(req.session);
+    }
+
+    res.status(200).send({
+
+    })
 })
 
 app.listen(PORT, ()=>{
