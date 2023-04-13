@@ -24,8 +24,8 @@ app.use(session({
     cookie:{
         httpOnly: true,
         secure: false,
-        maxAge: 1000 * 60 * 60 * 6 * 3,
-        expire: new Date(Date.now() + 24 * 60 * 60 * 1000 * 3)
+        maxAge: 1000 * 60 * 60 * 3,
+        expire: new Date(Date.now() + 60 * 60 * 1000 * 3)
     }
 }));
 app.use(cookieParser());
@@ -69,16 +69,14 @@ app.get('/games/:index', function(req, res){
 });
 
 app.post('/login', function (req, res){
-    // console.log(req.body)
     pool.query(get_login_result(req.body.username, req.body.password), function (error, rows){
         // 로그인 성공 시 세션 등록
         if (rows[0] !== undefined){
             req.session.uid = rows[0].uid;
             req.session.save();
             res.status(200).send({
-
+                loginResult : (rows[0] !== undefined)
             });
-            //console.log(req.session);
         }else{
             // 결과 전달
             res.send({
@@ -103,12 +101,19 @@ app.get('/', function (req, res){
 
 app.get('/logout', function (req, res){
     if(req.session.uid !== undefined){
-        req.session.destroy(req.session);
+        delete req.session.uid;
+        req.session.save();
     }
 
     res.status(200).send({
-
+        loginResult: (req.session.uid !== undefined)
     })
+})
+
+app.get('/auth', function (req, res){
+    res.status(200).send({
+        loginResult: (req.session.uid !== undefined)
+    });
 })
 
 app.listen(PORT, ()=>{
