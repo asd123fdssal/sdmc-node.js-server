@@ -32,7 +32,68 @@ function get_login_result(username, password){
     `
 }
 
+function sign_up_member(username, pw, email, nickname){
+    let verify_code = '';
+    for (let i = 0; i < 6; i++) {
+        verify_code += Math.floor(Math.random() * 10);
+    }
+
+    const verify_date = new Date(new Date().getTime() + 30 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
+
+    return (`
+        insert into 
+        member    
+            values(
+                null, 
+                \'${username}\',   
+                \'${pw}\',    
+                \'${email}\',   
+                \'${nickname}\',   
+                0,    
+                \'${verify_code}\',  
+                \'${verify_date}\'  
+            );
+    `)
+}
+
+function isDuplicateUsername(username){
+    return (`
+        select 
+            username 
+        from 
+            member 
+        where 
+            username = \'${username}\'
+    `);
+}
+
+function isDuplicateEmail(email){
+    return (`
+        select 
+            mail 
+        from 
+            member 
+        where 
+            mail = \'${email}\'
+    `);
+}
+
+function isDuplicateNickname(nickname){
+    return (`
+        select 
+            nickname 
+        from 
+            member 
+        where 
+            nickname = \'${nickname}\'
+    `);
+}
+
 module.exports = {
     get_game_title,
-    get_login_result
+    get_login_result,
+    sign_up_member,
+    isDuplicateUsername,
+    isDuplicateEmail,
+    isDuplicateNickname,
 }
