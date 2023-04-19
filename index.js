@@ -7,7 +7,8 @@ const {get_game_title, get_login_result, sign_up_member, isDuplicateUsername, is
     isDuplicateGame, uploadGame, isDupKorCompany, isDupOrgCompany, isDupOrgGameCompany, isDupKorGameCompany,
     insertNewGameCompany, selectAllGameCompany, selectAllGameSeries, isDupKorGameSeries, insertNewGameSeries,
     selectAllGameGenre, isDupGameGenreName, insertNewGameGenre, selectAllGameShop, isDupGameShopName, insertNewGameShop,
-    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharcterByGid
+    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharcterByGid,
+    insertCharacters, isDuplCharacters
 } = require('./config/sql_query');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
@@ -388,6 +389,35 @@ app.get("/games/titles/:id", async (req, res) => {
     } catch (err) {
         console.error(err);
     }
+});
+
+app.get("/characters/upload", async (req, res) => {
+   res.status(200).send({});
+});
+
+app.post("/characters/upload", async (req, res) => {
+    try{
+        let errorMessage = '';
+        const {title_id, org_name, kor_name, imageUrl, strategy} = req.body;
+        const [dup_characters] = await pool.query(isDuplCharacters(), [title_id, kor_name]);
+
+        if(dup_characters.length !== 0){
+            errorMessage = "이미 존재하는 캐릭터 입니다.";
+        }else{
+            const [characters] = await pool.query(insertCharacters(), [title_id, org_name, kor_name, imageUrl, strategy]);
+            if(characters.length === 0){
+                errorMessage = "알 수 없는 에러가 발생했습니다.";
+            }
+        }
+
+        if(errorMessage === ''){
+            res.status(200).send({message: "캐릭터 추가가 완료되었습니다."});
+        }else{
+            res.status(409).send({message: errorMessage});
+        }
+    }catch (err){
+        console.error(err);
+    };
 });
 
 app.listen(PORT, ()=>{

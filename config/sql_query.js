@@ -122,6 +122,14 @@ function selectCharcterByGid(){
     return (`SELECT * FROM characters where games_id = ?`);
 }
 
+function insertCharacters(){
+    return (`insert into \`characters\` values(null, ?, ?, ?, ?, ?)`);
+}
+
+function isDuplCharacters(){
+    return (`select id from \`characters\` where games_id = ? and kor_name = ?`);
+}
+
 module.exports = {
     get_game_title,
     get_login_result,
@@ -150,4 +158,6 @@ module.exports = {
     selectGameGenreByGid,
     selectMyGameShop,
     selectCharcterByGid,
+    insertCharacters,
+    isDuplCharacters,
 }
