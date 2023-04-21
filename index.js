@@ -7,7 +7,8 @@ const {get_game_title, get_login_result, sign_up_member, isDuplicateUsername, is
     isDuplicateGame, uploadGame, isDupKorCompany, isDupOrgCompany, isDupOrgGameCompany, isDupKorGameCompany,
     insertNewGameCompany, selectAllGameCompany, selectAllGameSeries, isDupKorGameSeries, insertNewGameSeries,
     selectAllGameGenre, isDupGameGenreName, insertNewGameGenre, selectAllGameShop, isDupGameShopName, insertNewGameShop,
-    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharcterByGid
+    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharcterByGid,
+    insertCharacters, isDuplCharacters, updateGameProgess
 } = require('./config/sql_query');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
@@ -382,13 +383,60 @@ app.get("/games/titles/:id", async (req, res) => {
         const [games] = await pool.query(selectGameByID(), [id]);
         const [genre] = await pool.query(selectGameGenreByGid(), [id]);
         const [shop] = await pool.query(selectMyGameShop(), [id, req.session.uid]);
-        const [characters] = await pool.query(selectCharcterByGid(), [id]);
+        const [characters] = await pool.query(selectCharcterByGid(), [req.session.uid, id]);
         const nickname = games[0].nickname.split(',').map((nick) => {return { key:nick, value: nick };});
+        console.log(characters)
         res.status(200).send({games: games[0], genres: genre, shop: (shop[0]===undefined? "": shop[0]), nickname:nickname, characters: characters});
     } catch (err) {
         console.error(err);
     }
 });
+
+app.get("/characters/upload", async (req, res) => {
+   res.status(200).send({});
+});
+
+app.post("/characters/upload", async (req, res) => {
+    try{
+        let errorMessage = '';
+        const {title_id, org_name, kor_name, imageUrl, strategy} = req.body;
+        const [dup_characters] = await pool.query(isDuplCharacters(), [title_id, kor_name]);
+
+        if(dup_characters.length !== 0){
+            errorMessage = "이미 존재하는 캐릭터 입니다.";
+        }else{
+            const [characters] = await pool.query(insertCharacters(), [title_id, org_name, kor_name, imageUrl, strategy]);
+            if(characters.length === 0){
+                errorMessage = "알 수 없는 에러가 발생했습니다.";
+            }
+        }
+
+        if(errorMessage === ''){
+            res.status(200).send({message: "캐릭터 추가가 완료되었습니다."});
+        }else{
+            res.status(409).send({message: errorMessage});
+        }
+    }catch (err){
+        console.error(err);
+    };
+});
+
+app.post("/member/character/progress", async (req, res) => {
+    try{
+        let errorMessage = '';
+        const {gpid, cid, progress} = req.body;
+        const [game_progress] = await pool.query(updateGameProgess(), [gpid, cid, req.session.uid, progress, progress]);
+        if(game_progress.length > 0){
+            res.status(200).send({});
+        }else{
+            res.status(409).send({
+                message: "알 수 없는 에러가 발생하였습니다."
+                                 });
+        }
+    }catch (err){
+        console.error(err);
+    }
+})
 
 app.listen(PORT, ()=>{
     console.log(`running on port ${PORT}`);
