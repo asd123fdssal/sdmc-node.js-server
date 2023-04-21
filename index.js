@@ -4,11 +4,11 @@ const PORT = process.env.port || 8080;
 const mysql      = require('mysql2/promise');
 const {DB_INFO, SESSION_SECRET, SESSION_KEY} = require("./config/conn_config");
 const {get_game_title, get_login_result, sign_up_member, isDuplicateUsername, isDuplicateNickname, isDuplicateEmail,
-    isDuplicateGame, uploadGame, isDupKorCompany, isDupOrgCompany, isDupOrgGameCompany, isDupKorGameCompany,
+    isDuplicateGame, uploadGame,  isDupKorGameCompany,
     insertNewGameCompany, selectAllGameCompany, selectAllGameSeries, isDupKorGameSeries, insertNewGameSeries,
     selectAllGameGenre, isDupGameGenreName, insertNewGameGenre, selectAllGameShop, isDupGameShopName, insertNewGameShop,
-    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharcterByGid,
-    insertCharacters, isDuplCharacters, updateGameProgess
+    insertGameGenre, insertGameShop, selectGameByID, selectGameGenreByGid, selectMyGameShop, selectCharacterByGid,
+    insertCharacters, isDuplCharacters, updateGameProgress, updateCharacters
 } = require('./config/sql_query');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
@@ -118,7 +118,7 @@ app.get('/logout', function (req, res){
     if(req.session.uid !== undefined){
         delete req.session.uid;
         req.session.save();
-    };
+    }
 
     res.status(200).send({
         loginResult: (req.session.uid !== undefined)
@@ -215,7 +215,7 @@ app.post('/games/upload', async (req, res) => {
                 }
             }
         }
-        if(errorMessage !== undefined && errorMessage !== ''){
+        if(errorMessage !== ''){
             res.status(409).send({message : errorMessage});
         }
     }catch (err){
@@ -239,14 +239,14 @@ app.post("/company/upload", async (req, res) => {
                 errorMessage = "알 수 없는 에러가 발생했습니다.";
             }
         }
-        if(errorMessage !== undefined && errorMessage !== ''){
+        if(errorMessage !== ''){
             res.status(200).send({message: "회사 추가 성공~"});
         }else{{
             res.status(403).send({message : errorMessage});
-        }};
+        }}
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.get("/api/company/all", async (req, res) => {
@@ -255,7 +255,7 @@ app.get("/api/company/all", async (req, res) => {
         res.status(200).send(company);
     }catch (err){
         console.error(err);
-    };
+    }
 })
 
 app.get("/api/series/all", async (req, res)=> {
@@ -264,7 +264,7 @@ app.get("/api/series/all", async (req, res)=> {
         res.status(200).send(series);
     }catch (err){
         console.error(err);
-    };
+    }
 })
 
 app.post("/series/upload", async (req, res) => {
@@ -283,14 +283,14 @@ app.post("/series/upload", async (req, res) => {
                 errorMessage = "알 수 없는 에러가 발생했습니다.";
             }
         }
-        if(errorMessage !== undefined && errorMessage !== ''){
+        if(errorMessage !== ''){
             res.status(200).send({message: "시리즈 추가 성공~"});
         }else{{
             res.status(403).send({message : errorMessage});
-        }};
+        }}
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.post("/genres/upload", async (req, res) => {
@@ -309,14 +309,14 @@ app.post("/genres/upload", async (req, res) => {
                 errorMessage = "알 수 없는 에러가 발생했습니다.";
             }
         }
-        if(errorMessage !== undefined && errorMessage !== ''){
+        if(errorMessage !== ''){
             res.status(200).send({message: "장르 추가 성공~"});
         }else{{
             res.status(403).send({message : errorMessage});
-        }};
+        }}
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.get("/api/genre/all",async (req, res) => {
@@ -325,7 +325,7 @@ app.get("/api/genre/all",async (req, res) => {
         res.status(200).send(genre);
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.get("/api/shops/all", async (req, res) => {
@@ -334,7 +334,7 @@ app.get("/api/shops/all", async (req, res) => {
         res.status(200).send(shops);
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.post("/shops/upload", async (req, res) => {
@@ -353,14 +353,14 @@ app.post("/shops/upload", async (req, res) => {
                 errorMessage = "알 수 없는 에러가 발생했습니다.";
             }
         }
-        if(errorMessage !== undefined && errorMessage !== ''){
+        if(errorMessage !== ''){
             res.status(200).send({message: "구매처 추가 성공~"});
         }else{{
             res.status(403).send({message : errorMessage});
-        }};
+        }}
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.get("/api/games/id", async (req, res) => {
@@ -374,7 +374,7 @@ app.get("/api/games/id", async (req, res) => {
         }
     }catch (err){
         console.error(err)
-    };
+    }
 });
 
 app.get("/games/titles/:id", async (req, res) => {
@@ -383,9 +383,9 @@ app.get("/games/titles/:id", async (req, res) => {
         const [games] = await pool.query(selectGameByID(), [id]);
         const [genre] = await pool.query(selectGameGenreByGid(), [id]);
         const [shop] = await pool.query(selectMyGameShop(), [id, req.session.uid]);
-        const [characters] = await pool.query(selectCharcterByGid(), [req.session.uid, id]);
+        const [characters] = await pool.query(selectCharacterByGid(), [req.session.uid, id]);
         const nickname = games[0].nickname.split(',').map((nick) => {return { key:nick, value: nick };});
-        console.log(characters)
+
         res.status(200).send({games: games[0], genres: genre, shop: (shop[0]===undefined? "": shop[0]), nickname:nickname, characters: characters});
     } catch (err) {
         console.error(err);
@@ -418,14 +418,13 @@ app.post("/characters/upload", async (req, res) => {
         }
     }catch (err){
         console.error(err);
-    };
+    }
 });
 
 app.post("/member/character/progress", async (req, res) => {
     try{
-        let errorMessage = '';
         const {gpid, cid, progress} = req.body;
-        const [game_progress] = await pool.query(updateGameProgess(), [gpid, cid, req.session.uid, progress, progress]);
+        const [game_progress] = await pool.query(updateGameProgress(), [gpid, cid, req.session.uid, progress, progress]);
         if(game_progress.length > 0){
             res.status(200).send({});
         }else{
@@ -437,6 +436,30 @@ app.post("/member/character/progress", async (req, res) => {
         console.error(err);
     }
 })
+
+app.post("/characters/update", async (req, res) => {
+   try{
+       let errorMessage = '';
+       const {org_name, kor_name, imageUrl, strategy, cid} = req.body;
+
+       if(kor_name === undefined || kor_name === ""){
+           errorMessage = "캐릭터명(한글)을 입력해주세요.";
+       }else{
+           const [characters] = await pool.query(updateCharacters(), [org_name, kor_name, imageUrl, strategy, cid]);
+           if(characters.affectedRows !== 1){
+               errorMessage = "알 수 없는 에러가 발생했습니다.";
+           }
+       }
+
+       if(errorMessage === ''){
+           res.status(200).send({message: "캐릭터 수정이 완료되었습니다."});
+       }else{
+           res.status(409).send({message: errorMessage});
+       }
+   }catch (err){
+       console.error(err)
+   }
+});
 
 app.listen(PORT, ()=>{
     console.log(`running on port ${PORT}`);

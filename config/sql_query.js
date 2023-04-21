@@ -118,7 +118,7 @@ function selectMyGameShop(){
     return (`select kor_name from game_member_has_shop mhs inner join member m on m.id = mhs.member_id inner join game_shop gs on gs.id = mhs.game_shop_id where mhs.games_id = ? and mhs.member_id = ?`);
 }
 
-function selectCharcterByGid(){
+function selectCharacterByGid(){
     return (`SELECT c.id as 'cid', c.games_id, c.org_name, c.kor_name, c.pic_dir, c.strategy, gp.id as 'gpid', gp.progress FROM characters c left join game_progress gp on gp.characters_id = c.id left join member m on gp.member_id = m.id and m.id = ? where c.games_id = ?`);
 }
 
@@ -126,11 +126,15 @@ function insertCharacters(){
     return (`insert into \`characters\` values(null, ?, ?, ?, ?, ?)`);
 }
 
+function updateCharacters(){
+    return (`update characters set org_name = ?, kor_name = ?, pic_dir = ?, strategy = ? where id = ?`);
+}
+
 function isDuplCharacters(){
     return (`select id from \`characters\` where games_id = ? and kor_name = ?`);
 }
 
-function updateGameProgess() {
+function updateGameProgress() {
     return (`insert into game_progress values(?, ?, ?, ?) on duplicate key update progress = ?;`);
 }
 
@@ -161,8 +165,9 @@ module.exports = {
     selectGameByID,
     selectGameGenreByGid,
     selectMyGameShop,
-    selectCharcterByGid,
+    selectCharacterByGid,
     insertCharacters,
     isDuplCharacters,
-    updateGameProgess,
+    updateGameProgress,
+    updateCharacters,
 }
