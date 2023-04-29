@@ -594,7 +594,6 @@ app.get("/api/games/max-page", async (req, res) => {
    }
 });
 
-
 app.listen(PORT, ()=>{
     console.log(`running on port ${PORT}`);
 });

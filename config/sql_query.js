@@ -176,6 +176,14 @@ function updateGames(){
     return (`update games set company_id = (select id from game_company where kor_name = ?), series_id = (select id from game_series where kor_name = ?), img_dir = ?, release_date = ?, org_name = ?, kor_name = ?, synopsis = ?, hookcode = ?, etc = ?, nickname = ? where id = ?`);
 }
 
+function insertCharacters(){
+    return (`insert into \`characters\` values(null, ?, ?, ?, ?, ?)`);
+}
+
+function isDuplCharacters(){
+    return (`select id from \`characters\` where games_id = ? and kor_name = ?`);
+}
+
 module.exports = {
     get_game_title,
     get_login_result,
