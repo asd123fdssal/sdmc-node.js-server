@@ -106,4 +106,4 @@ dist
 # For security
 conn_config.js
 
-/uploads/
+uploads/
