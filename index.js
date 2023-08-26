@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.port || 8080;
+const PORT = process.env.port || 80;
 const mysql      = require('mysql2/promise');
 const {DB_INFO, SESSION_SECRET, SESSION_KEY} = require("./config/conn_config");
 const {get_game_title, get_login_result, sign_up_member, isDuplicateUsername, isDuplicateNickname, isDuplicateEmail,
@@ -54,7 +54,7 @@ app.use(express.static("uploads"));
 //app.use(cors());
 
 // 로컬 개발 환경에서 cors 에러를 피하기 위한 코드
-const whitelist = ["http://localhost:3000", "211.250.184.206:3000"];
+const whitelist = ["http://localhost:3000", "http://sdmc.co.kr:80", "http://localhost"];
 
 const corsOptions = {
     credentials : true,
@@ -73,17 +73,16 @@ setInterval(function () {
     pool.query('SELECT 1');
 }, 5000);
 
-app.get('/games', async(req, res) => {
+app.get('/api/games', async(req, res) => {
     try {
         const [games] = await pool.query(get_game_title(), [1, MAX_CONTENTS]);
-        console.log(games)
         res.send({games: games});
     }catch (err){
         console.error(err)
     }
 });
 
-app.get('/games/:index', async (req, res) => {
+app.get('/api/games/:index', async (req, res) => {
     try {
         const {options, value, order, genre} = req.query;
         const page = parseInt(req.params.index);
@@ -99,7 +98,7 @@ app.get('/games/:index', async (req, res) => {
         }else if(order === '가나다순'){
             orderQuery = 'order by title_name asc';
         }
-        console.log(genre)
+
         if(options && value !== '' && value){
             const mode = options.value;
             const [games] = await pool.query(get_game_title(orderQuery), [value, mode !== '제목', value, mode !== '제작사', value, mode !== '시리즈', genres, genres === '', genre?genre.length:0, genre?false:true, ((page - 1) * MAX_CONTENTS), MAX_CONTENTS]);
@@ -115,10 +114,10 @@ app.get('/games/:index', async (req, res) => {
     }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
     try {
         const [users] = await pool.query(get_login_result(), [req.body.username, req.body.password]);
-        if(users !== undefined){
+        if(users && users[0]){
             req.session.uid = users[0].uid;
             req.session.save();
             res.status(200).send({});
@@ -130,7 +129,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.get('/login', function(req, res){
+app.get('/api/login', function(req, res){
     res.status((req.session.uid !== undefined)? 200 : 401).send({
 
     });
@@ -140,7 +139,7 @@ app.get('/', function (req, res){
     res.status(200).json({});
 });
 
-app.get('/logout', function (req, res){
+app.get('/api/logout', function (req, res){
     if(req.session.uid !== undefined){
         delete req.session.uid;
         req.session.save();
@@ -151,20 +150,20 @@ app.get('/logout', function (req, res){
     });
 });
 
-app.get('/auth', function (req, res){
+app.get('/api/auth', function (req, res){
     res.status(200).send({loginResult: (req.session.uid !== undefined)});
 });
 
-app.get('/signup', function(req, res){
+app.get('/api/signup', function(req, res){
     res.status(200).send({});
 });
 
-app.post("/images", upload.single("image"), (req, res) => {
+app.post("/api/images", upload.single("image"), (req, res) => {
     const file = req.file;
     res.status(200).send({imageUrl: file.filename});
 });
 
-app.post('/signup', async (req, res) => {
+app.post('/api/signup', async (req, res) => {
     let errorMessage = '';
     const {username, password, email, nickname} = req.body;
 
@@ -199,7 +198,7 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-app.post('/games/upload', async (req, res) => {
+app.post('/api/games/upload', async (req, res) => {
     try{
         let nicknames = '';
         let {company, series, imageUrl, release_date, org_name, kor_name, synopsis, hookcode, etc, nickname, genre, shop} = req.body;
@@ -251,7 +250,7 @@ app.post('/games/upload', async (req, res) => {
     }
 });
 
-app.post("/company/upload", async (req, res) => {
+app.post("/api/company/upload", async (req, res) => {
     try{
         let errorMessage = '';
         const {kor_name, org_name} = req.body;
@@ -295,7 +294,7 @@ app.get("/api/series/all", async (req, res)=> {
     }
 })
 
-app.post("/series/upload", async (req, res) => {
+app.post("/api/series/upload", async (req, res) => {
     try{
         let errorMessage = '';
         const {kor_name, nickname} = req.body;
@@ -321,7 +320,7 @@ app.post("/series/upload", async (req, res) => {
     }
 });
 
-app.post("/genres/upload", async (req, res) => {
+app.post("/api/genres/upload", async (req, res) => {
     try{
         let errorMessage = '';
         const {kor_name} = req.body;
@@ -365,7 +364,7 @@ app.get("/api/shops/all", async (req, res) => {
     }
 });
 
-app.post("/shops/upload", async (req, res) => {
+app.post("/api/shops/upload", async (req, res) => {
     try{
         let errorMessage = '';
         const {kor_name} = req.body;
@@ -405,7 +404,7 @@ app.get("/api/games/id", async (req, res) => {
     }
 });
 
-app.get("/games/titles/:id", async (req, res) => {
+app.get("/api/games/titles/:id", async (req, res) => {
     const id = req.params.id;
     const {uid} = req.session;
     try {
@@ -427,11 +426,11 @@ app.get("/games/titles/:id", async (req, res) => {
     }
 });
 
-app.get("/characters/upload", async (req, res) => {
+app.get("/api/characters/upload", async (req, res) => {
    res.status(200).send({});
 });
 
-app.post("/characters/upload", async (req, res) => {
+app.post("/api/characters/upload", async (req, res) => {
     try{
         let errorMessage = '';
         const {title_id, org_name, kor_name, imageUrl, strategy} = req.body;
@@ -456,7 +455,7 @@ app.post("/characters/upload", async (req, res) => {
     }
 });
 
-app.post("/member/character/progress", async (req, res) => {
+app.post("/api/member/character/progress", async (req, res) => {
     try{
         const {gpid, cid, progress} = req.body;
         const [game_progress] = await pool.query(updateGameProgress(), [gpid, cid, req.session.uid, progress, progress]);
@@ -472,7 +471,7 @@ app.post("/member/character/progress", async (req, res) => {
     }
 })
 
-app.post("/characters/update", async (req, res) => {
+app.post("/api/characters/update", async (req, res) => {
    try{
        let errorMessage = '';
        const {org_name, kor_name, imageUrl, strategy, cid} = req.body;
@@ -496,7 +495,7 @@ app.post("/characters/update", async (req, res) => {
    }
 });
 
-app.post("/games/update", async (req, res) => {
+app.post("/api/games/update", async (req, res) => {
     try{
         const {id, company, series, imageUrl, release_date, gameInfo, genre, nickname, shop} = req.body;
         const {org_name, kor_name, synopsis, hookcode, etc} = gameInfo;
@@ -525,7 +524,7 @@ app.post("/games/update", async (req, res) => {
     }
 })
 
-app.put("/games/titles/recommends", async (req, res) => {
+app.put("/api/games/titles/recommends", async (req, res) => {
     try {
         const {gid, recommend} = req.body;
         const {uid} = req.session;
@@ -593,7 +592,6 @@ app.get("/api/games/max-page", async (req, res) => {
        console.error(err);
    }
 });
-
 
 app.listen(PORT, ()=>{
     console.log(`running on port ${PORT}`);
